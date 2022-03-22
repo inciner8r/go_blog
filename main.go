@@ -1,9 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 type blog struct {
@@ -13,7 +18,18 @@ type blog struct {
 	Content     string `json:"content"`
 }
 
+func setup() {
+
+}
+
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	k := os.Getenv("MONGOURI")
+	fmt.Println(k)
 	r := mux.NewRouter()
-	http.ListenAndServe(":4000", r)
+	handler := cors.Default().Handler(r)
+	http.ListenAndServe(":4000", handler)
 }
