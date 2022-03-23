@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 
 type blog struct {
 	Title       string `json:"title"`
-	DateTime    string `json:"date"`
+	Datetime    string `json:"datetime"`
 	Description string `json:"description"`
 	Content     string `json:"content"`
 }
@@ -37,15 +38,27 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db := client.Database("blog")
-	blogsCollection := db.Collection("blogs")
+	fmt.Println("mongo done")
+	//db := client.Database("blog")
+	//blogsCollection := db.Collection("blogs")
 
-	blog := blog{"a", "b", "c", "d"}
-	CreateBook(blog, blogsCollection, context.TODO())
+	// blog := blog{"a", "b", "c", "d"}
+	// CreateBook(blog, blogsCollection, context.TODO())
 
 	r := mux.NewRouter()
+	r.Path("/new").Methods(http.MethodPost).HandlerFunc(postBlog)
 	// handler := cors.Default().Handler(r)
 	http.ListenAndServe(":4000", r)
+}
+
+func postBlog(w http.ResponseWriter, r *http.Request) {
+	b := blog{}
+	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+		fmt.Println(err)
+		http.Error(w, "Error decoidng response object", http.StatusBadRequest)
+		return
+	}
+	fmt.Println(b)
 }
 
 func CreateBook(b blog, blogsCollection *mongo.Collection, ctx context.Context) (string, error) {
