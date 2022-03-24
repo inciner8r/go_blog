@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -21,7 +19,7 @@ type blog struct {
 	Content     string `json:"content"`
 }
 
-func main() {
+func connectdb() *mongo.Client {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -37,31 +35,42 @@ func main() {
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
 		log.Fatal(err)
+	} else {
+		fmt.Println("mongo done")
+
 	}
-	fmt.Println("mongo done")
-	//db := client.Database("blog")
+	return client
+}
+
+func getCollection(client *mongo.Client, collectionName string) *mongo.Collection {
+	collection := client.Database("blog").Collection(collectionName)
+	return collection
+}
+func main() {
+	// := client.Database("blog")
 	//blogsCollection := db.Collection("blogs")
+	var db *mongo.Client = connectdb()
+	getCollection(db, "blogs")
 
-	// blog := blog{"a", "b", "c", "d"}
-	// CreateBook(blog, blogsCollection, context.TODO())
-
-	r := mux.NewRouter()
-	r.Path("/new").Methods(http.MethodPost).HandlerFunc(postBlog)
-	// handler := cors.Default().Handler(r)
-	http.ListenAndServe(":4000", r)
+	r := gin.Default()
+	r.GET("/new", postBlog)
+	r.Run("localhost:4000")
 }
 
-func postBlog(w http.ResponseWriter, r *http.Request) {
-	b := blog{}
-	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
-		fmt.Println(err)
-		http.Error(w, "Error decoidng response object", http.StatusBadRequest)
-		return
-	}
-	fmt.Println(b)
+// func postBlog(w http.ResponseWriter, r *http.Request) {
+// 	b := blog{}
+// 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+// 		fmt.Println(err)
+// 		http.Error(w, "Error decoidng response object", http.StatusBadRequest)
+// 		os.Exit(1)
+// 	}
+// }
+func postBlog(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "hello",
+	})
 }
-
-func CreateBook(b blog, blogsCollection *mongo.Collection, ctx context.Context) (string, error) {
+func CreateBlog(b blog, blogsCollection *mongo.Collection, ctx context.Context) (string, error) {
 	result, err := blogsCollection.InsertOne(ctx, b)
 	if err != nil {
 		return "0", err
