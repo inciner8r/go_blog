@@ -3,13 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"github.com/inciner8r/go_blog/configs"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type blog struct {
@@ -19,38 +16,11 @@ type blog struct {
 	Content     string `json:"content"`
 }
 
-func connectdb() *mongo.Client {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	mongoURI := os.Getenv("MONGOURI")
-
-	clientOptions := options.Client().ApplyURI(mongoURI)
-
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		fmt.Println("mongo done")
-
-	}
-	return client
-}
-
-func getCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database("blog").Collection(collectionName)
-	return collection
-}
 func main() {
 	// := client.Database("blog")
 	//blogsCollection := db.Collection("blogs")
-	var db *mongo.Client = connectdb()
-	getCollection(db, "blogs")
+	var db *mongo.Client = configs.ConnectDB()
+	configs.GetCollection(db, "blogs")
 
 	r := gin.Default()
 	r.GET("/new", postBlog)
