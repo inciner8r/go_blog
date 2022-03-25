@@ -1,12 +1,8 @@
 package main
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/inciner8r/go_blog/configs"
-	"github.com/inciner8r/go_blog/models"
 	"github.com/inciner8r/go_blog/routes"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -25,10 +21,11 @@ func postBlog(c *gin.Context) {
 		"message": "hello",
 	})
 }
-func CreateBlog(b models.Blog, blogsCollection *mongo.Collection, ctx context.Context) (string, error) {
-	result, err := blogsCollection.InsertOne(ctx, b)
-	if err != nil {
-		return "0", err
-	}
-	return fmt.Sprintf("%v", result.InsertedID), err
-}
+
+// func CreateBlog(b models.Blog, blogsCollection *mongo.Collection, ctx context.Context) (string, error) {
+// 	result, err := blogsCollection.InsertOne(ctx, b)
+// 	if err != nil {
+// 		return "0", err
+// 	}
+// 	return fmt.Sprintf("%v", result.InsertedID), err
+// }
