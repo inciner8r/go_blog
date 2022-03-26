@@ -76,6 +76,7 @@ func EditABlog(c *gin.Context) {
 	result, err := blogsCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
+		result
 	}
 
 	var UpdatedBlog models.Blog
@@ -87,4 +88,35 @@ func EditABlog(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, gin.H{"data": result})
 	}
+}
+
+func DeleteABlog(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	blogId := c.Param("blogId")
+	defer cancel()
+
+	objId, _ := primitive.ObjectIDFromHex(blogId)
+
+	result, err := blogsCollection.DeleteOne(ctx, bson.M{"id": objId})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"data": err})
+		return
+	}
+	if result.DeletedCount < 1 {
+		c.JSON(http.StatusNotFound, gin.H{"data": "user not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": "User successfully deleted!"})
+}
+func GetAllBlogs(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	var blogs []models.Blog
+	defer cancel()
+
+	results, err := blogsCollection.Find(ctx, bson.M{})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
+		return
+	}
+
 }
