@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/inciner8r/go_blog/configs"
 	"github.com/inciner8r/go_blog/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -24,6 +26,7 @@ func CreateBlog(c *gin.Context) {
 	}
 
 	newBlog := models.Blog{
+		Id:          primitive.NewObjectID(),
 		Title:       blog.Title,
 		Datetime:    blog.Datetime,
 		Description: blog.Description,
@@ -36,4 +39,20 @@ func CreateBlog(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{"data": result})
 
+}
+
+func GetABlog(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	var blog models.Blog
+	blogId := c.Param("blogId")
+	defer cancel()
+
+	objId, _ := primitive.ObjectIDFromHex(blogId)
+
+	err := blogsCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&blog)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"data": err})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": blog})
 }
