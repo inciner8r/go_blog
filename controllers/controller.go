@@ -82,12 +82,12 @@ func EditABlog(c *gin.Context) {
 
 	var UpdatedBlog models.Blog
 	if result.MatchedCount == 1 {
-		err := blogsCollection.FindOne(ctx, bson.M{"id": blogId}).Decode(&UpdatedBlog)
+		err := blogsCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&UpdatedBlog)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"data": err})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"data": result})
+		c.JSON(http.StatusOK, gin.H{"data": UpdatedBlog})
 	}
 }
 
