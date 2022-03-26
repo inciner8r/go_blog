@@ -8,4 +8,5 @@ import (
 func Routes(router *gin.Engine) {
 	router.POST("/new", controllers.CreateBlog)
 	router.GET("/blog/:blogId", controllers.GetABlog)
+	router.PUT("/blog/:blogId", controllers.EditABlog)
 }

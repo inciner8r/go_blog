@@ -20,8 +20,9 @@ func CreateBlog(c *gin.Context) {
 	var blog models.Blog
 	defer cancel()
 
+	//validate request
 	if err := c.BindJSON(&blog); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"data": err})
+		c.JSON(http.StatusBadRequest, gin.H{"data": err.Error()})
 		return
 	}
 
@@ -34,7 +35,7 @@ func CreateBlog(c *gin.Context) {
 	}
 	result, err := blogsCollection.InsertOne(ctx, newBlog)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"data": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"data": result})
@@ -51,8 +52,39 @@ func GetABlog(c *gin.Context) {
 
 	err := blogsCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&blog)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"data": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": blog})
+}
+
+func EditABlog(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	var blog models.Blog
+	blogId := c.Param("blogId")
+	defer cancel()
+
+	objId, _ := primitive.ObjectIDFromHex(blogId)
+
+	//validate request
+	if err := c.BindJSON(&blog); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"data": err.Error()})
+		return
+	}
+
+	update := bson.M{"title": blog.Title, "datetime": blog.Datetime, "description": blog.Description, "content": blog.Content}
+	result, err := blogsCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
+	}
+
+	var UpdatedBlog models.Blog
+	if result.MatchedCount == 1 {
+		err := blogsCollection.FindOne(ctx, bson.M{"id": blogId}).Decode(&UpdatedBlog)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"data": err})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": result})
+	}
 }
