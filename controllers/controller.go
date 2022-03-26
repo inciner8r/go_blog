@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -76,7 +77,7 @@ func EditABlog(c *gin.Context) {
 	result, err := blogsCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
-		result
+		return
 	}
 
 	var UpdatedBlog models.Blog
@@ -118,5 +119,15 @@ func GetAllBlogs(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
 		return
 	}
+	fmt.Println(results)
 
+	defer results.Close(ctx)
+	for results.Next(ctx) {
+		var singleBlog models.Blog
+		if err := results.Decode(&singleBlog); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
+		}
+		blogs = append(blogs, singleBlog)
+	}
+	c.JSON(http.StatusOK, gin.H{"data": blogs})
 }
