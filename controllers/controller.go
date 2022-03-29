@@ -130,4 +130,8 @@ func GetAllBlogs(c *gin.Context) {
 		blogs = append(blogs, singleBlog)
 	}
 	c.JSON(http.StatusOK, gin.H{"data": blogs})
+
+	// //alternative to above
+	// writeData, _ := json.Marshal(&blogs)
+	// c.Data(http.StatusOK, "application/json", writeData)
 }
