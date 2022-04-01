@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/inciner8r/go_blog/configs"
 	"github.com/inciner8r/go_blog/models"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var usersCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")
@@ -25,15 +25,16 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	password, _ := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+
 	newUser := models.User{
-		Id:       primitive.NewObjectID(),
 		Name:     user.Name,
 		Email:    user.Email,
-		Password: user.Password,
+		Password: string(password),
 	}
 	result, err := usersCollection.InsertOne(ctx, newUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
 	}
-	c.JSON(http.StatusCreated, gin.H{"data": result})
+	c.JSON(http.StatusCreated, gin.H{"data": result.InsertedID})
 }
