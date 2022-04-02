@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -55,9 +56,15 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
 		return
 	}
+	result := usersCollection.FindOne(ctx, bson.M{"email": requestUser.Email})
+	fmt.Println(result)
 	if err := bcrypt.CompareHashAndPassword([]byte(mongoUser.Password), []byte(requestUser.Password)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"data": err.Error()})
 		return
 	}
+
+	// claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+	// 	Issuer: ,
+	// })
 	c.JSON(http.StatusCreated, gin.H{"data": mongoUser})
 }

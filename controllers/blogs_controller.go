@@ -28,7 +28,6 @@ func CreateBlog(c *gin.Context) {
 	}
 
 	newBlog := models.Blog{
-		Id:          primitive.NewObjectID(),
 		Title:       blog.Title,
 		Datetime:    blog.Datetime,
 		Description: blog.Description,
