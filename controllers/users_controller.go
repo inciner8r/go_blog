@@ -7,12 +7,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/inciner8r/go_blog/configs"
 	"github.com/inciner8r/go_blog/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const secretKey = "secret"
 
 var usersCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")
 
@@ -63,8 +66,17 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-	// 	Issuer: ,
-	// })
-	c.JSON(http.StatusCreated, gin.H{"data": mongoUser})
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    mongoUser.ID.Hex(),
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	token, err := claims.SignedString([]byte(secretKey))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
+		return
+	}
+
+	c.SetCookie("jwt", token, 1, "/", "localhost", false, true)
+	c.JSON(http.StatusCreated, gin.H{"data": token})
 }
