@@ -82,6 +82,19 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": token})
 }
 
-func logout(c *gin.Context) {
-
+func User(c *gin.Context) {
+	cookie, err := c.Cookie("jwt")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"data": err.Error()})
+		return
+	}
+	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
+	})
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"data": err.Error()})
+		return
+	}
+	claims := token.Claims
+	c.JSON(http.StatusAccepted, gin.H{"data": claims})
 }
