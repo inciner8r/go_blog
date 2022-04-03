@@ -77,6 +77,11 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("jwt", token, 1, "/", "localhost", false, true)
+	c.SetCookie("jwt", token, int((1 * time.Hour).Seconds()), "/", "localhost", false, true)
+
 	c.JSON(http.StatusCreated, gin.H{"data": token})
+}
+
+func logout(c *gin.Context) {
+
 }

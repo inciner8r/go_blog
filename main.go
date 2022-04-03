@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/inciner8r/go_blog/configs"
 	"github.com/inciner8r/go_blog/routes"
@@ -12,6 +13,7 @@ func main() {
 	configs.GetCollection(db, "blogs")
 
 	r := gin.Default()
+	r.Use(cors.Default())
 	routes.Routes(r)
 	r.Run("localhost:4000")
 }
@@ -21,11 +23,3 @@ func postBlog(c *gin.Context) {
 		"message": "hello",
 	})
 }
-
-// func CreateBlog(b models.Blog, blogsCollection *mongo.Collection, ctx context.Context) (string, error) {
-// 	result, err := blogsCollection.InsertOne(ctx, b)
-// 	if err != nil {
-// 		return "0", err
-// 	}
-// 	return fmt.Sprintf("%v", result.InsertedID), err
-// }
