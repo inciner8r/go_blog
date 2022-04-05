@@ -11,6 +11,7 @@ import (
 	"github.com/inciner8r/go_blog/configs"
 	"github.com/inciner8r/go_blog/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -59,8 +60,6 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
 		return
 	}
-	result := usersCollection.FindOne(ctx, bson.M{"email": requestUser.Email})
-	fmt.Println(result)
 	if err := bcrypt.CompareHashAndPassword([]byte(mongoUser.Password), []byte(requestUser.Password)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"data": err.Error()})
 		return
@@ -70,7 +69,7 @@ func Login(c *gin.Context) {
 		Issuer:    mongoUser.ID.Hex(),
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 	})
-
+	fmt.Println(claims)
 	token, err := claims.SignedString([]byte(secretKey))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"data": err.Error()})
@@ -83,6 +82,10 @@ func Login(c *gin.Context) {
 }
 
 func User(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	var user models.User
+	defer cancel()
+
 	cookie, err := c.Cookie("jwt")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"data": err.Error()})
@@ -95,6 +98,14 @@ func User(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"data": err.Error()})
 		return
 	}
-	claims := token.Claims
-	c.JSON(http.StatusAccepted, gin.H{"data": claims})
+	claims := token.Claims.(*jwt.StandardClaims)
+	objID, err := primitive.ObjectIDFromHex(claims.Issuer)
+	if err != nil {
+		c.JSON(http.StatusAccepted, gin.H{"data": err.Error()})
+		return
+	}
+
+	//pass objectid to search using _id
+	usersCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
+	c.JSON(http.StatusAccepted, gin.H{"data": user})
 }
