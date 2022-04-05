@@ -109,3 +109,9 @@ func User(c *gin.Context) {
 	usersCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
 	c.JSON(http.StatusAccepted, gin.H{"data": user})
 }
+
+func Logout(c *gin.Context) {
+	c.SetCookie("jwt", "", int(-(1 * time.Hour).Seconds()), "/", "localhost", false, true)
+
+	c.JSON(http.StatusAccepted, gin.H{"message": "logged out"})
+}
